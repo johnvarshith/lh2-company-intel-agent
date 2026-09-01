@@ -212,7 +212,8 @@ Potential extensions include:
 
 ## 👨‍💻 Author
 
-**[Your Name]**
+**varshith
+
 
 Built for the **LH2 AI Labs Automation Intern Assignment**.
 
