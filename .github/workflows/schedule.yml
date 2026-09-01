@@ -1,0 +1,12 @@
+name: Scheduled Pipeline Trigger
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Runs every 6 hours
+  workflow_dispatch:       # Adds a "Run workflow" button in GitHub UI
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Agent
+        run: |
+          curl -X POST "https://lh2-company-intel-agent.onrender.com/trigger"
