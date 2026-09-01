@@ -36,7 +36,12 @@ def get_pending_rows():
 
 async def process_pipeline():
     logging.info("🚀 Pipeline run started")
-    pending = get_pending_rows()
+    try:
+        pending = get_pending_rows()
+    except Exception as e:
+        logging.error(f"Failed to read sheet: {e}")
+        return
+        
     if not pending:
         logging.info("✅ No new rows. Pipeline idle.")
         return
@@ -44,32 +49,41 @@ async def process_pipeline():
     for item in pending:
         company, website, row_num = item["company"], item["website"], item["row_num"]
         logging.info(f"Processing: {company}")
-
-        # ENRICH
-        signal_browser = await scrape_company(website)
-        signal_http = {"domain_length": len(website), "has_www": "www" in website}
-        signals = {"browser": signal_browser, "http": signal_http}
-
-        # PERSIST
-        supabase.table("company_intel").insert({
-            "company_name": company, "website": website,
-            "signals": signals, "sheet_row": row_num, "processed": False
-        }).execute()
-
-        # JUDGE
-        verdict = judge_company(company, signals)
-
-        # UPDATE DB
-        supabase.table("company_intel").update({
-            "verdict": verdict, "processed": True
-        }).eq("sheet_row", row_num).execute()
-
-        # SYNC BACK TO SHEET
-        sheet.update_cell(row_num, 3, "Processed")
-        sheet.update_cell(row_num, 4, f"{verdict['fit_call']} ({verdict['confidence']}%)")
-        sheet.update_cell(row_num, 5, verdict["reasoning"])
-
-        logging.info(f"✅ Completed: {company} → {verdict['fit_call']}")
+        
+        try:
+            # ENRICH
+            signal_browser = await scrape_company(website)
+            signal_http = {"domain_length": len(website), "has_www": "www" in website}
+            signals = {"browser": signal_browser, "http": signal_http}
+            
+            # PERSIST
+            supabase.table("company_intel").insert({
+                "company_name": company, "website": website,
+                "signals": signals, "sheet_row": row_num, "processed": False
+            }).execute()
+            
+            # JUDGE
+            verdict = judge_company(company, signals)
+            
+            # UPDATE DB
+            supabase.table("company_intel").update({
+                "verdict": verdict, "processed": True
+            }).eq("sheet_row", row_num).execute()
+            
+            # SYNC BACK TO SHEET
+            sheet.update_cell(row_num, 3, "Processed")
+            sheet.update_cell(row_num, 4, f"{verdict['fit_call']} ({verdict['confidence']}%)")
+            sheet.update_cell(row_num, 5, verdict["reasoning"])
+            
+            logging.info(f"✅ Completed: {company} → {verdict['fit_call']}")
+            
+        except Exception as e:
+            logging.error(f"❌ Error processing {company}: {str(e)}")
+            # Mark as failed in sheet so it doesn't loop forever
+            try:
+                sheet.update_cell(row_num, 3, f"Error: {str(e)[:50]}")
+            except:
+                pass
 
 # --- SCHEDULER (Req 6: fires on schedule without restart) ---
 @app.on_event("startup")
