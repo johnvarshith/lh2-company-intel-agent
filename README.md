@@ -2,9 +2,8 @@
 
 An end-to-end, autonomous B2B lead qualification agent. It ingests a list of companies from a Google Sheet, autonomously browses the web to gather intelligence, reasons over the evidence using an LLM, and writes structured verdicts back to the sheet—all without human intervention.
 
-**🔗 Live App & API Docs:** [Insert your Render URL here]/docs  
-**📂 GitHub Repository:** [Insert your GitHub Repo Link here]  
-**🎥 Demo Video Walkthrough:** [Insert your Loom/YouTube Video Link here]  
+**🔗 Live App & API Docs:** https://lh2-company-intel-agent.onrender.com/docs  
+
 
 ---
 
