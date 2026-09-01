@@ -9,5 +9,3 @@ pydantic==2.5.2
 apscheduler==3.10.4
 python-dotenv==1.0.0
 httpx==0.25.2
-gotrue==2.4.1
-postgrest==0.16.1
